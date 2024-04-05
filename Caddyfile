@@ -1,0 +1,37 @@
+#change to your domain
+cloud.<domain>.com {
+    # Reverse proxy to Nextcloud. Update IP and Port if needed
+    reverse_proxy localhost:8080 {
+        # WebDAV support
+        header_up X-Forwarded-For {remote_host} # Should not need changed
+        header_up Host {host} # Should not need changed
+    }
+
+    # Enable HSTS
+    header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+
+    # Additional security headers
+    header {
+        # Referrer Policy
+        Referrer-Policy "no-referrer"
+        # MIME type sniffing protection
+        X-Content-Type-Options "nosniff"
+        # Clickjacking protection
+        X-Frame-Options "SAMEORIGIN"
+        # XSS protection
+        X-XSS-Protection "1; mode=block"
+        # Remove the Server header
+        -Server
+    }
+
+    # Logging
+    log {
+        output file /var/log/caddy/nextcloud_access.log
+    }
+
+    # Enable automatic HTTPS
+    tls {
+        # Adjust the email to your email address
+        email your-email@example.com
+    }
+}
