@@ -15,7 +15,6 @@ logger = logging.getLogger(__name__)
 intents = discord.Intents.default()
 intents.message_content = True
 intents.messages = True
-intents.guild_messages = True
 
 client = discord.Client(intents=intents)
 
@@ -80,6 +79,8 @@ def load_data():
             with open(SUBSCRIPTIONS_FILE, 'r') as f:
                 data = json.load(f)
                 subscriptions = {int(k): set(v) for k, v in data.items()}
+        else:
+            subscriptions = {}
     except Exception as e:
         logger.error(f"Error loading subscriptions: {e}")
         subscriptions = {}
@@ -89,9 +90,13 @@ def load_data():
         if os.path.exists(TRACKER_STATUS_FILE):
             with open(TRACKER_STATUS_FILE, 'r') as f:
                 tracker_status = json.load(f)
+        else:
+            tracker_status = {}
     except Exception as e:
         logger.error(f"Error loading tracker status: {e}")
         tracker_status = {}
+    
+    logger.info(f"Loaded {len(subscriptions)} user subscriptions and status for {len(tracker_status)} trackers")
 
 def save_data():
     """Save subscriptions and tracker status to files"""
@@ -225,6 +230,21 @@ async def notify_subscribers(tracker_code: str, tracker_info: dict):
 @client.event
 async def on_ready():
     print(f'Torrent Tracker Bot logged in as {client.user}')
+    
+    # Warn if TARGET_CHANNEL_ID is not set
+    if TARGET_CHANNEL_ID is None:
+        print("⚠️  WARNING: TARGET_CHANNEL_ID is not set!")
+        print("   - Notifications will not be sent")
+        print("   - Bot will respond in ALL channels where it has access")
+        print("   - Please set TARGET_CHANNEL_ID in the script")
+    else:
+        channel = client.get_channel(TARGET_CHANNEL_ID)
+        if channel:
+            print(f"✅ Target channel set to: #{channel.name} ({TARGET_CHANNEL_ID})")
+        else:
+            print(f"❌ ERROR: Could not find channel with ID {TARGET_CHANNEL_ID}")
+            print("   Please verify the channel ID is correct")
+    
     load_data()
     # Start monitoring in the background
     client.loop.create_task(monitor_trackers())
@@ -235,10 +255,12 @@ async def on_message(message):
         return
     
     # Only respond in the target channel or when mentioned
-    if TARGET_CHANNEL_ID and message.channel.id != TARGET_CHANNEL_ID and not client.user.mentioned_in(message):
+    # If TARGET_CHANNEL_ID is None, respond everywhere (with warning logged)
+    if TARGET_CHANNEL_ID is not None and message.channel.id != TARGET_CHANNEL_ID and not client.user.mentioned_in(message):
         return
     
     content = message.content.lower().strip()
+    args = content.split()
     
     # Help command
     if content in ['!help', '!tracker help']:
@@ -294,7 +316,10 @@ async def on_message(message):
     
     # Subscribe to tracker
     elif content.startswith('!subscribe '):
-        tracker_code = content.split(' ', 1)[1].upper()
+        if len(args) < 2:
+            await message.channel.send("❌ Please specify a tracker code. Example: `!subscribe RED`")
+            return
+        tracker_code = args[1].upper()
         
         if tracker_code not in TRACKERS:
             await message.channel.send(f"❌ Unknown tracker: {tracker_code}\nUse `!trackers` to see available trackers.")
@@ -313,7 +338,10 @@ async def on_message(message):
     
     # Unsubscribe from tracker
     elif content.startswith('!unsubscribe '):
-        tracker_code = content.split(' ', 1)[1].upper()
+        if len(args) < 2:
+            await message.channel.send("❌ Please specify a tracker code. Example: `!unsubscribe RED`")
+            return
+        tracker_code = args[1].upper()
         
         if tracker_code not in TRACKERS:
             await message.channel.send(f"❌ Unknown tracker: {tracker_code}")
