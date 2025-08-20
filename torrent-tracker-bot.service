@@ -1,0 +1,30 @@
+[Unit]
+Description=Torrent Tracker Signup Bot
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/var/discord/trackers
+Environment=PATH=/var/discord/trackers/venv/bin
+ExecStart=/var/discord/trackers/venv/bin/python torrent_tracker_bot.py
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=torrent-tracker-bot
+
+# Environment variables (set your Discord bot token here)
+Environment=DISCORD_BOT_TOKEN=YOUR_BOT_TOKEN_HERE
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/discord/trackers
+
+[Install]
+WantedBy=multi-user.target
