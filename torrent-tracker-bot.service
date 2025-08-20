@@ -16,8 +16,8 @@ StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=torrent-tracker-bot
 
-# Environment variables (set your Discord bot token here)
-Environment=DISCORD_BOT_TOKEN=YOUR_BOT_TOKEN_HERE
+# Environment variables (set your Discord bot token with: systemctl edit torrent-tracker-bot)
+# Environment=DISCORD_BOT_TOKEN=your_bot_token_here
 
 # Security settings
 NoNewPrivileges=true

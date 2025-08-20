@@ -148,6 +148,7 @@ tracker_status: Dict[str, bool] = {}  # tracker_code -> is_open
 reddit_posts: Dict[str, dict] = {}  # post_id -> post_data
 last_check_time = None
 REDDIT_FILE = "reddit_posts.json"
+data_lock = asyncio.Lock()  # Prevent concurrent file writes
 
 def load_data():
     """Load subscriptions, tracker status, and reddit posts from files"""
@@ -189,23 +190,24 @@ def load_data():
     
     logger.info(f"Loaded {len(subscriptions)} user subscriptions, status for {len(tracker_status)} trackers, and {len(reddit_posts)} reddit posts")
 
-def save_data():
+async def save_data():
     """Save subscriptions, tracker status, and reddit posts to files"""
-    try:
-        # Save subscriptions
-        with open(SUBSCRIPTIONS_FILE, 'w') as f:
-            data = {str(k): list(v) for k, v in subscriptions.items()}
-            json.dump(data, f, indent=2)
-        
-        # Save tracker status
-        with open(TRACKER_STATUS_FILE, 'w') as f:
-            json.dump(tracker_status, f, indent=2)
-        
-        # Save reddit posts
-        with open(REDDIT_FILE, 'w') as f:
-            json.dump(reddit_posts, f, indent=2)
-    except Exception as e:
-        logger.error(f"Error saving data: {e}")
+    async with data_lock:
+        try:
+            # Save subscriptions
+            with open(SUBSCRIPTIONS_FILE, 'w') as f:
+                data = {str(k): list(v) for k, v in subscriptions.items()}
+                json.dump(data, f, indent=2)
+            
+            # Save tracker status
+            with open(TRACKER_STATUS_FILE, 'w') as f:
+                json.dump(tracker_status, f, indent=2)
+            
+            # Save reddit posts
+            with open(REDDIT_FILE, 'w') as f:
+                json.dump(reddit_posts, f, indent=2)
+        except Exception as e:
+            logger.error(f"Error saving data: {e}")
 
 async def check_tracker_signup(session: aiohttp.ClientSession, tracker_code: str, tracker_info: dict) -> bool:
     """
@@ -436,7 +438,7 @@ async def monitor_trackers():
                     await notify_reddit_signup(post_info)
                     post_info['notified'] = True
             
-            save_data()
+            await save_data()
             logger.info(f"Check completed. Found {len(new_reddit_posts) if 'new_reddit_posts' in locals() else 0} new Reddit posts. Next check in {CHECK_INTERVAL} seconds.")
             
         except Exception as e:
@@ -613,7 +615,7 @@ async def on_message(message):
             await message.channel.send(f"ℹ️ You're already subscribed to {name}")
         else:
             subscriptions[user_id].add(tracker_code)
-            save_data()
+            await save_data()
             name = TRACKERS[tracker_code]['name'] if tracker_code in TRACKERS else "Reddit r/OpenSignups"
             await message.channel.send(f"✅ Subscribed to {name} notifications!")
     
@@ -633,7 +635,7 @@ async def on_message(message):
             subscriptions[user_id].remove(tracker_code)
             if not subscriptions[user_id]:  # Remove empty subscription sets
                 del subscriptions[user_id]
-            save_data()
+            await save_data()
             name = TRACKERS[tracker_code]['name'] if tracker_code in TRACKERS else "Reddit r/OpenSignups"
             await message.channel.send(f"✅ Unsubscribed from {name} notifications!")
         else:

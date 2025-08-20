@@ -11,9 +11,28 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
-# Set up directories
+# Get script directory (where the repo files are)
+SCRIPT_DIR=$(dirname "$(realpath "$0")")
+echo "📂 Script location: $SCRIPT_DIR"
+
+# Set up target directory
 BOT_DIR="/var/discord/trackers"
-echo "📁 Using directory: $BOT_DIR"
+echo "📁 Target directory: $BOT_DIR"
+
+# Create target directory if it doesn't exist
+mkdir -p "$BOT_DIR"
+
+# Copy files if not already in target directory
+if [ "$SCRIPT_DIR" != "$BOT_DIR" ]; then
+    echo "📋 Copying bot files to $BOT_DIR..."
+    cp "$SCRIPT_DIR"/*.py "$BOT_DIR/"
+    cp "$SCRIPT_DIR"/*.txt "$BOT_DIR/"
+    cp "$SCRIPT_DIR"/*.service "$BOT_DIR/"
+    cp "$SCRIPT_DIR"/*.md "$BOT_DIR/" 2>/dev/null || true
+    echo "✅ Files copied successfully"
+else
+    echo "✅ Already running from target directory"
+fi
 
 # Create virtual environment if it doesn't exist
 if [ ! -d "$BOT_DIR/venv" ]; then
