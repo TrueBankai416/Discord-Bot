@@ -247,7 +247,7 @@ async def on_ready():
     
     load_data()
     # Start monitoring in the background
-    client.loop.create_task(monitor_trackers())
+    asyncio.create_task(monitor_trackers())
 
 @client.event
 async def on_message(message):

@@ -6,7 +6,6 @@ import os
 intents = discord.Intents.default()
 intents.message_content = True # Enables reading messages
 intents.messages = True  # Ensure this is enabled
-intents.guild_messages = True  # Enables receiving messages in guilds
 #intents.direct_messages = True  # Enables receiving direct messages
 permissions = discord.Permissions(permissions=274877992000)
 permissions.read_messages = True
@@ -30,7 +29,6 @@ KEYWORD_RESPONSES = {
 async def on_ready():
     print(f'We have logged in as {client.user}')
 
-@client.event
 @client.event
 async def on_message(message):
     global awaiting_reverse_proxy_response
