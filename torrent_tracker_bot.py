@@ -3,8 +3,9 @@ import asyncio
 import aiohttp
 import json
 import os
-from datetime import datetime, timedelta
-from typing import Dict, List, Set
+import re
+from datetime import datetime, timedelta, timezone
+from typing import Dict, List, Set, Optional
 import logging
 
 # Set up logging
@@ -30,48 +31,127 @@ TRACKERS = {
         "name": "Redacted (RED)",
         "url": "https://redacted.ch",
         "signup_url": "https://redacted.ch/register.php",
-        "description": "Music tracker"
+        "description": "Music tracker",
+        "type": "tracker"
     },
     "OPS": {
         "name": "Orpheus (OPS)",
         "url": "https://orpheus.network",
         "signup_url": "https://orpheus.network/register.php",
-        "description": "Music tracker"
+        "description": "Music tracker",
+        "type": "tracker"
     },
     "PTP": {
         "name": "PassThePopcorn (PTP)",
         "url": "https://passthepopcorn.me",
         "signup_url": "https://passthepopcorn.me/register.php",
-        "description": "Movie tracker"
+        "description": "Movie tracker",
+        "type": "tracker"
     },
     "BTN": {
         "name": "BroadcasTheNet (BTN)",
         "url": "https://broadcasthe.net",
         "signup_url": "https://broadcasthe.net/register.php",
-        "description": "TV tracker"
+        "description": "TV tracker",
+        "type": "tracker"
     },
     "HDB": {
         "name": "HDBits (HDB)",
         "url": "https://hdbits.org",
         "signup_url": "https://hdbits.org/register.php",
-        "description": "HD movie/TV tracker"
+        "description": "HD movie/TV tracker",
+        "type": "tracker"
     },
     "AB": {
         "name": "AnimeBytes (AB)",
         "url": "https://animebytes.tv",
         "signup_url": "https://animebytes.tv/register.php",
-        "description": "Anime tracker"
+        "description": "Anime tracker",
+        "type": "tracker"
+    },
+    "TL": {
+        "name": "TorrentLeech (TL)",
+        "url": "https://www.torrentleech.org",
+        "signup_url": "https://www.torrentleech.org/user/account/register",
+        "description": "General tracker",
+        "type": "tracker"
+    },
+    "FNP": {
+        "name": "FeenoPeer (FNP)",
+        "url": "https://feernopeeer.com",
+        "signup_url": "https://feernopeeer.com/register.php",
+        "description": "General tracker",
+        "type": "tracker"
+    },
+    "SP": {
+        "name": "SeedPool (SP)",
+        "url": "https://www.seedpool.org",
+        "signup_url": "https://www.seedpool.org/register.php",
+        "description": "General tracker",
+        "type": "tracker"
+    },
+    "DC": {
+        "name": "DigitalCore (DC)",
+        "url": "https://digitalcore.club",
+        "signup_url": "https://digitalcore.club/register.php",
+        "description": "General tracker",
+        "type": "tracker"
+    },
+    "OTW": {
+        "name": "Old Toons World (OTW)",
+        "url": "https://oldtoonsworld.com",
+        "signup_url": "https://oldtoonsworld.com/register.php",
+        "description": "Cartoon/Animation tracker",
+        "type": "tracker"
+    },
+    "BBT": {
+        "name": "BakaBT (BBT)",
+        "url": "https://bakabt.me",
+        "signup_url": "https://bakabt.me/signup.php",
+        "description": "Anime tracker",
+        "type": "tracker"
+    },
+    # Usenet Indexers
+    "DS": {
+        "name": "DrunkenSlug (DS)",
+        "url": "https://drunkenslug.com",
+        "signup_url": "https://drunkenslug.com/register",
+        "description": "Usenet indexer",
+        "type": "usenet"
+    },
+    "GEEK": {
+        "name": "NZBGeek (GEEK)",
+        "url": "https://nzbgeek.info",
+        "signup_url": "https://nzbgeek.info/register.php",
+        "description": "Usenet indexer",
+        "type": "usenet"
+    },
+    "PLANET": {
+        "name": "NZBPlanet (PLANET)",
+        "url": "https://nzbplanet.net",
+        "signup_url": "https://nzbplanet.net/register",
+        "description": "Usenet indexer",
+        "type": "usenet"
+    },
+    "FINDER": {
+        "name": "NZBFinder (FINDER)",
+        "url": "https://nzbfinder.ws",
+        "signup_url": "https://nzbfinder.ws/register",
+        "description": "Usenet indexer",
+        "type": "usenet"
     }
 }
 
 # Global variables
 subscriptions: Dict[int, Set[str]] = {}  # user_id -> set of tracker codes
 tracker_status: Dict[str, bool] = {}  # tracker_code -> is_open
+reddit_posts: Dict[str, dict] = {}  # post_id -> post_data
 last_check_time = None
+REDDIT_FILE = "reddit_posts.json"
 
 def load_data():
-    """Load subscriptions and tracker status from files"""
-    global subscriptions, tracker_status
+    """Load subscriptions, tracker status, and reddit posts from files"""
+    global subscriptions, tracker_status, reddit_posts
     
     # Load subscriptions
     try:
@@ -96,10 +176,21 @@ def load_data():
         logger.error(f"Error loading tracker status: {e}")
         tracker_status = {}
     
-    logger.info(f"Loaded {len(subscriptions)} user subscriptions and status for {len(tracker_status)} trackers")
+    # Load reddit posts
+    try:
+        if os.path.exists(REDDIT_FILE):
+            with open(REDDIT_FILE, 'r') as f:
+                reddit_posts = json.load(f)
+        else:
+            reddit_posts = {}
+    except Exception as e:
+        logger.error(f"Error loading reddit posts: {e}")
+        reddit_posts = {}
+    
+    logger.info(f"Loaded {len(subscriptions)} user subscriptions, status for {len(tracker_status)} trackers, and {len(reddit_posts)} reddit posts")
 
 def save_data():
-    """Save subscriptions and tracker status to files"""
+    """Save subscriptions, tracker status, and reddit posts to files"""
     try:
         # Save subscriptions
         with open(SUBSCRIPTIONS_FILE, 'w') as f:
@@ -109,6 +200,10 @@ def save_data():
         # Save tracker status
         with open(TRACKER_STATUS_FILE, 'w') as f:
             json.dump(tracker_status, f, indent=2)
+        
+        # Save reddit posts
+        with open(REDDIT_FILE, 'w') as f:
+            json.dump(reddit_posts, f, indent=2)
     except Exception as e:
         logger.error(f"Error saving data: {e}")
 
@@ -163,16 +258,165 @@ async def check_tracker_signup(session: aiohttp.ClientSession, tracker_code: str
         logger.error(f"Error checking {tracker_code}: {e}")
         return False
 
+async def check_reddit_opensignups(session: aiohttp.ClientSession) -> List[dict]:
+    """Check /r/OpenSignups for new posts"""
+    try:
+        headers = {
+            'User-Agent': 'TorrentTrackerBot/1.0 (Discord Bot for signup notifications)'
+        }
+        
+        # Use Reddit JSON API
+        url = "https://www.reddit.com/r/OpenSignups/new.json?limit=25"
+        
+        async with session.get(url, headers=headers, timeout=15) as response:
+            if response.status == 200:
+                data = await response.json()
+                new_posts = []
+                
+                for post in data['data']['children']:
+                    post_data = post['data']
+                    post_id = post_data['id']
+                    
+                    # Skip if we've already seen this post
+                    if post_id in reddit_posts:
+                        continue
+                    
+                    # Extract relevant information
+                    title = post_data['title']
+                    url = post_data['url']
+                    selftext = post_data.get('selftext', '')
+                    created_utc = post_data['created_utc']
+                    author = post_data['author']
+                    permalink = f"https://reddit.com{post_data['permalink']}"
+                    
+                    # Look for expiration dates and invite codes in title and text
+                    full_text = f"{title} {selftext}".lower()
+                    
+                    # Extract expiration date patterns
+                    expiry_patterns = [
+                        r'expires?\s+(?:on\s+)?(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})',
+                        r'until\s+(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})',
+                        r'(\d{1,2}\s+(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s+\d{2,4})',
+                        r'ends?\s+(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})',
+                        r'closes?\s+(?:on\s+)?(\d{1,2}[/-]\d{1,2}[/-]\d{2,4})'
+                    ]
+                    
+                    expiry_date = None
+                    for pattern in expiry_patterns:
+                        match = re.search(pattern, full_text, re.IGNORECASE)
+                        if match:
+                            expiry_date = match.group(1)
+                            break
+                    
+                    # Extract invite codes
+                    invite_patterns = [
+                        r'invite\s*code[:\s]+([A-Za-z0-9]+)',
+                        r'code[:\s]+([A-Za-z0-9]+)',
+                        r'use[:\s]+([A-Za-z0-9]+)',
+                        r'registration\s*code[:\s]+([A-Za-z0-9]+)'
+                    ]
+                    
+                    invite_code = None
+                    for pattern in invite_patterns:
+                        match = re.search(pattern, full_text, re.IGNORECASE)
+                        if match:
+                            invite_code = match.group(1)
+                            break
+                    
+                    # Determine tracker type from title
+                    tracker_type = "tracker"  # default
+                    if any(word in full_text for word in ['usenet', 'nzb', 'indexer']):
+                        tracker_type = "usenet"
+                    
+                    post_info = {
+                        'id': post_id,
+                        'title': title,
+                        'url': url,
+                        'selftext': selftext,
+                        'author': author,
+                        'permalink': permalink,
+                        'created_utc': created_utc,
+                        'expiry_date': expiry_date,
+                        'invite_code': invite_code,
+                        'tracker_type': tracker_type,
+                        'notified': False
+                    }
+                    
+                    reddit_posts[post_id] = post_info
+                    new_posts.append(post_info)
+                
+                return new_posts
+            else:
+                logger.warning(f"Failed to check Reddit: HTTP {response.status}")
+                return []
+                
+    except Exception as e:
+        logger.error(f"Error checking Reddit: {e}")
+        return []
+
+async def notify_reddit_signup(post_info: dict):
+    """Notify subscribers about a Reddit signup post"""
+    if not TARGET_CHANNEL_ID:
+        return
+    
+    channel = client.get_channel(TARGET_CHANNEL_ID)
+    if not channel:
+        logger.error(f"Could not find channel {TARGET_CHANNEL_ID}")
+        return
+    
+    # Create notification message
+    embed = discord.Embed(
+        title="🔥 New Signup from r/OpenSignups!",
+        description=post_info['title'],
+        color=0xff4500,  # Reddit orange
+        timestamp=datetime.fromtimestamp(post_info['created_utc'], timezone.utc),
+        url=post_info['permalink']
+    )
+    
+    embed.add_field(name="Type", value=post_info['tracker_type'].title(), inline=True)
+    embed.add_field(name="Author", value=f"u/{post_info['author']}", inline=True)
+    
+    if post_info['expiry_date']:
+        embed.add_field(name="⏰ Expires", value=post_info['expiry_date'], inline=True)
+    
+    if post_info['invite_code']:
+        embed.add_field(name="🎫 Invite Code", value=f"`{post_info['invite_code']}`", inline=False)
+    
+    if post_info['selftext'] and len(post_info['selftext']) > 0:
+        # Truncate long text
+        text = post_info['selftext'][:500]
+        if len(post_info['selftext']) > 500:
+            text += "..."
+        embed.add_field(name="Details", value=text, inline=False)
+    
+    if post_info['url'] != post_info['permalink']:
+        embed.add_field(name="🔗 Direct Link", value=post_info['url'], inline=False)
+    
+    embed.set_footer(text="From r/OpenSignups • React quickly!")
+    
+    # Get all users subscribed to reddit notifications (using "REDDIT" as a special tracker code)
+    subscribers = []
+    for user_id, user_trackers in subscriptions.items():
+        if "REDDIT" in user_trackers:
+            subscribers.append(f"<@{user_id}>")
+    
+    if subscribers:
+        mention_text = " ".join(subscribers)
+        await channel.send(f"{mention_text}", embed=embed)
+    else:
+        await channel.send(embed=embed)
+
 async def monitor_trackers():
     """Main monitoring loop"""
     global last_check_time
     
     while True:
         try:
-            logger.info("Checking tracker signups...")
+            logger.info("Checking tracker signups and Reddit...")
             last_check_time = datetime.now()
             
             async with aiohttp.ClientSession() as session:
+                # Check individual trackers
                 for tracker_code, tracker_info in TRACKERS.items():
                     is_open = await check_tracker_signup(session, tracker_code, tracker_info)
                     previous_status = tracker_status.get(tracker_code, False)
@@ -185,9 +429,15 @@ async def monitor_trackers():
                     
                     # Small delay between checks to be respectful
                     await asyncio.sleep(2)
+                
+                # Check Reddit for new posts
+                new_reddit_posts = await check_reddit_opensignups(session)
+                for post_info in new_reddit_posts:
+                    await notify_reddit_signup(post_info)
+                    post_info['notified'] = True
             
             save_data()
-            logger.info(f"Tracker check completed. Next check in {CHECK_INTERVAL} seconds.")
+            logger.info(f"Check completed. Found {len(new_reddit_posts) if 'new_reddit_posts' in locals() else 0} new Reddit posts. Next check in {CHECK_INTERVAL} seconds.")
             
         except Exception as e:
             logger.error(f"Error in monitoring loop: {e}")
@@ -209,7 +459,7 @@ async def notify_subscribers(tracker_code: str, tracker_info: dict):
         title="🚨 Tracker Signup Open!",
         description=f"**{tracker_info['name']}** signups are now open!",
         color=0x00ff00,
-        timestamp=datetime.now()
+        timestamp=datetime.now(timezone.utc)
     )
     embed.add_field(name="Description", value=tracker_info['description'], inline=False)
     embed.add_field(name="Signup URL", value=tracker_info['signup_url'], inline=False)
@@ -289,6 +539,11 @@ async def on_message(message):
             inline=False
         )
         embed.add_field(
+            name="!reddit", 
+            value="Subscribe/unsubscribe to Reddit r/OpenSignups notifications", 
+            inline=False
+        )
+        embed.add_field(
             name="!status", 
             value="Show bot status and last check time", 
             inline=False
@@ -300,16 +555,40 @@ async def on_message(message):
         embed = discord.Embed(
             title="Monitored Torrent Trackers",
             color=0x0099ff,
-            timestamp=datetime.now()
+            timestamp=datetime.now(timezone.utc)
         )
         
+        # Group by type
+        trackers_by_type = {}
         for tracker_code, tracker_info in TRACKERS.items():
+            tracker_type = tracker_info.get('type', 'tracker')
+            if tracker_type not in trackers_by_type:
+                trackers_by_type[tracker_type] = []
+            
             status = "🟢 OPEN" if tracker_status.get(tracker_code, False) else "🔴 CLOSED"
-            embed.add_field(
-                name=f"{tracker_code} - {tracker_info['name']}",
-                value=f"Status: {status}\nType: {tracker_info['description']}",
-                inline=True
-            )
+            trackers_by_type[tracker_type].append({
+                'code': tracker_code,
+                'name': tracker_info['name'],
+                'status': status,
+                'description': tracker_info['description']
+            })
+        
+        # Add trackers grouped by type
+        for tracker_type, trackers in trackers_by_type.items():
+            type_emoji = "🎬" if tracker_type == "tracker" else "📰"
+            for tracker in trackers:
+                embed.add_field(
+                    name=f"{type_emoji} {tracker['code']} - {tracker['name']}",
+                    value=f"Status: {tracker['status']}\nType: {tracker['description']}",
+                    inline=True
+                )
+        
+        # Add Reddit monitoring status
+        embed.add_field(
+            name="🔥 REDDIT - r/OpenSignups",
+            value="Status: 🟢 MONITORING\nType: Reddit posts",
+            inline=True
+        )
         
         embed.set_footer(text=f"Last checked: {last_check_time.strftime('%Y-%m-%d %H:%M:%S UTC') if last_check_time else 'Never'}")
         await message.channel.send(embed=embed)
@@ -317,12 +596,12 @@ async def on_message(message):
     # Subscribe to tracker
     elif content.startswith('!subscribe '):
         if len(args) < 2:
-            await message.channel.send("❌ Please specify a tracker code. Example: `!subscribe RED`")
+            await message.channel.send("❌ Please specify a tracker code. Example: `!subscribe RED` or `!subscribe REDDIT`")
             return
         tracker_code = args[1].upper()
         
-        if tracker_code not in TRACKERS:
-            await message.channel.send(f"❌ Unknown tracker: {tracker_code}\nUse `!trackers` to see available trackers.")
+        if tracker_code not in TRACKERS and tracker_code != "REDDIT":
+            await message.channel.send(f"❌ Unknown tracker: {tracker_code}\nUse `!trackers` to see available trackers or use `REDDIT` for r/OpenSignups.")
             return
         
         user_id = message.author.id
@@ -330,20 +609,22 @@ async def on_message(message):
             subscriptions[user_id] = set()
         
         if tracker_code in subscriptions[user_id]:
-            await message.channel.send(f"ℹ️ You're already subscribed to {TRACKERS[tracker_code]['name']}")
+            name = TRACKERS[tracker_code]['name'] if tracker_code in TRACKERS else "Reddit r/OpenSignups"
+            await message.channel.send(f"ℹ️ You're already subscribed to {name}")
         else:
             subscriptions[user_id].add(tracker_code)
             save_data()
-            await message.channel.send(f"✅ Subscribed to {TRACKERS[tracker_code]['name']} notifications!")
+            name = TRACKERS[tracker_code]['name'] if tracker_code in TRACKERS else "Reddit r/OpenSignups"
+            await message.channel.send(f"✅ Subscribed to {name} notifications!")
     
     # Unsubscribe from tracker
     elif content.startswith('!unsubscribe '):
         if len(args) < 2:
-            await message.channel.send("❌ Please specify a tracker code. Example: `!unsubscribe RED`")
+            await message.channel.send("❌ Please specify a tracker code. Example: `!unsubscribe RED` or `!unsubscribe REDDIT`")
             return
         tracker_code = args[1].upper()
         
-        if tracker_code not in TRACKERS:
+        if tracker_code not in TRACKERS and tracker_code != "REDDIT":
             await message.channel.send(f"❌ Unknown tracker: {tracker_code}")
             return
         
@@ -353,9 +634,11 @@ async def on_message(message):
             if not subscriptions[user_id]:  # Remove empty subscription sets
                 del subscriptions[user_id]
             save_data()
-            await message.channel.send(f"✅ Unsubscribed from {TRACKERS[tracker_code]['name']} notifications!")
+            name = TRACKERS[tracker_code]['name'] if tracker_code in TRACKERS else "Reddit r/OpenSignups"
+            await message.channel.send(f"✅ Unsubscribed from {name} notifications!")
         else:
-            await message.channel.send(f"ℹ️ You're not subscribed to {TRACKERS[tracker_code]['name']}")
+            name = TRACKERS[tracker_code]['name'] if tracker_code in TRACKERS else "Reddit r/OpenSignups"
+            await message.channel.send(f"ℹ️ You're not subscribed to {name}")
     
     # List user subscriptions
     elif content == '!subscriptions':
@@ -371,13 +654,21 @@ async def on_message(message):
             )
             
             for tracker_code in user_subs:
-                tracker_info = TRACKERS[tracker_code]
-                status = "🟢 OPEN" if tracker_status.get(tracker_code, False) else "🔴 CLOSED"
-                embed.add_field(
-                    name=f"{tracker_code} - {tracker_info['name']}",
-                    value=f"Status: {status}",
-                    inline=True
-                )
+                if tracker_code == "REDDIT":
+                    embed.add_field(
+                        name="🔥 REDDIT - r/OpenSignups",
+                        value="Status: 🟢 MONITORING",
+                        inline=True
+                    )
+                else:
+                    tracker_info = TRACKERS[tracker_code]
+                    status = "🟢 OPEN" if tracker_status.get(tracker_code, False) else "🔴 CLOSED"
+                    type_emoji = "🎬" if tracker_info.get('type') == "tracker" else "📰"
+                    embed.add_field(
+                        name=f"{type_emoji} {tracker_code} - {tracker_info['name']}",
+                        value=f"Status: {status}",
+                        inline=True
+                    )
             
             await message.channel.send(embed=embed)
     
@@ -386,7 +677,7 @@ async def on_message(message):
         embed = discord.Embed(
             title="Bot Status",
             color=0x0099ff,
-            timestamp=datetime.now()
+            timestamp=datetime.now(timezone.utc)
         )
         
         embed.add_field(
@@ -409,6 +700,11 @@ async def on_message(message):
         embed.add_field(
             name="Open Trackers",
             value=f"{open_trackers}/{len(TRACKERS)}",
+            inline=True
+        )
+        embed.add_field(
+            name="Reddit Posts Tracked",
+            value=str(len(reddit_posts)),
             inline=True
         )
         
