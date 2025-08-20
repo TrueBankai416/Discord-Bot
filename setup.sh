@@ -27,7 +27,7 @@ if [ "$SCRIPT_DIR" != "$BOT_DIR" ]; then
     echo "📋 Copying bot files to $BOT_DIR..."
     cp "$SCRIPT_DIR"/*.py "$BOT_DIR/"
     cp "$SCRIPT_DIR"/*.txt "$BOT_DIR/"
-    cp "$SCRIPT_DIR"/*.service "$BOT_DIR/"
+    cp "$SCRIPT_DIR"/*.service "$BOT_DIR/" 2>/dev/null || true
     cp "$SCRIPT_DIR"/*.md "$BOT_DIR/" 2>/dev/null || true
     echo "✅ Files copied successfully"
 else
