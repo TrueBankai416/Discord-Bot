@@ -21,11 +21,12 @@ A Discord bot that provides automated support for Nextcloud-related questions.
 A Discord bot that monitors popular private torrent trackers for open signups and notifies users.
 
 **Features:**
-- Monitors 6 popular private trackers (RED, OPS, PTP, BTN, HDB, AB)
-- User subscription system
+- Monitors 12 torrent trackers, 4 Usenet indexers, and Reddit r/OpenSignups
+- User subscription system with Discord commands
 - Real-time notifications when signups open
+- Extracts expiration dates and invite codes from Reddit posts
 - Persistent storage of subscriptions and tracker status
-- Comprehensive command system
+- Comprehensive command system with help documentation
 
 **Usage:**
 - See `README_torrent_tracker_bot.md` for detailed setup instructions
