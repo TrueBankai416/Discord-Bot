@@ -17,7 +17,7 @@ A Discord bot that monitors popular private torrent trackers for open signups an
 - **RED** (Redacted) - Music tracker
 - **OPS** (Orpheus) - Music tracker  
 - **PTP** (PassThePopcorn) - Movie tracker
-- **BTN** (BroadcasTheNet) - TV tracker
+- **BTN** (BroadcastTheNet) - TV tracker
 - **HDB** (HDBits) - HD movie/TV tracker
 - **AB** (AnimeBytes) - Anime tracker
 - **TL** (TorrentLeech) - General tracker

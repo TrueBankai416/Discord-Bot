@@ -49,7 +49,7 @@ TRACKERS = {
         "type": "tracker"
     },
     "BTN": {
-        "name": "BroadcasTheNet (BTN)",
+        "name": "BroadcastTheNet (BTN)",
         "url": "https://broadcasthe.net",
         "signup_url": "https://broadcasthe.net/register.php",
         "description": "TV tracker",
