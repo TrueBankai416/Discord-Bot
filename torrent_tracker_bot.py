@@ -78,8 +78,8 @@ TRACKERS = {
     },
     "FNP": {
         "name": "FeenoPeer (FNP)",
-        "url": "https://feernopeeer.com",
-        "signup_url": "https://feernopeeer.com/register.php",
+        "url": "https://feenopeer.com",
+        "signup_url": "https://feenopeer.com/register.php",
         "description": "General tracker",
         "type": "tracker"
     },
@@ -232,9 +232,9 @@ async def check_tracker_signup(session: aiohttp.ClientSession, tracker_code: str
                 
                 closed_indicators = [
                     'registration is closed',
-                    'invites only',
                     'invitation required',
-                    'closed registration'
+                    'closed registration',
+                    'registration disabled'
                 ]
                 
                 text_lower = text.lower()
@@ -413,7 +413,7 @@ async def monitor_trackers():
     while True:
         try:
             logger.info("Checking tracker signups and Reddit...")
-            last_check_time = datetime.now()
+            last_check_time = datetime.now(timezone.utc)
             
             async with aiohttp.ClientSession() as session:
                 # Check individual trackers
@@ -539,8 +539,8 @@ async def on_message(message):
             inline=False
         )
         embed.add_field(
-            name="!reddit", 
-            value="Subscribe/unsubscribe to Reddit r/OpenSignups notifications", 
+            name="Reddit Monitoring", 
+            value="Use `!subscribe REDDIT` or `!unsubscribe REDDIT` for r/OpenSignups notifications", 
             inline=False
         )
         embed.add_field(
