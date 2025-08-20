@@ -1,0 +1,23 @@
+# Discord bot dependencies
+discord.py>=2.3.0
+
+# HTTP client for checking tracker websites
+aiohttp>=3.8.0
+
+# JSON handling (built-in, but listing for clarity)
+# json - built-in module
+
+# Async support (built-in, but listing for clarity)  
+# asyncio - built-in module
+
+# Logging (built-in, but listing for clarity)
+# logging - built-in module
+
+# Date/time handling (built-in, but listing for clarity)
+# datetime - built-in module
+
+# OS operations (built-in, but listing for clarity)
+# os - built-in module
+
+# Type hints (built-in in Python 3.8+, but listing for clarity)
+# typing - built-in module
