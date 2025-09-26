@@ -302,7 +302,6 @@ def is_likely_english(text: str) -> bool:
     if len(words) < 3:
         return True  # Too short to determine, assume English
     
-    english_count = sum(1 for word in words if word in english_indicators)
     non_english_count = sum(1 for word in words if word in non_english_indicators)
     
     # Assume English unless we have a significant number of non-English indicators
