@@ -1,0 +1,5 @@
+# Discord bot dependencies
+discord.py~=2.3.0
+
+# HTTP client for checking tracker websites
+aiohttp~=3.8.0
