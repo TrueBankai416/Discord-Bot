@@ -83,6 +83,46 @@ TRACKERS = {
         "type": "tracker",
         "language": "english"
     },
+    "AB": {
+        "name": "AnimeBytes (AB)",
+        "url": "https://animebytes.tv",
+        "signup_url": "https://animebytes.tv/register.php",
+        "description": "Anime tracker",
+        "type": "tracker",
+        "language": "english"
+    },
+    "BBT": {
+        "name": "BakaBT (BBT)",
+        "url": "https://bakabt.me",
+        "signup_url": "https://bakabt.me/signup.php",
+        "description": "Anime tracker",
+        "type": "tracker",
+        "language": "english"
+    },
+    "FNP": {
+        "name": "FeenoPeer (FNP)",
+        "url": "https://feenopeer.com",
+        "signup_url": "https://feenopeer.com/register.php",
+        "description": "General tracker",
+        "type": "tracker",
+        "language": "english"
+    },
+    "SP": {
+        "name": "SeedPool (SP)",
+        "url": "https://www.seedpool.org",
+        "signup_url": "https://www.seedpool.org/register.php",
+        "description": "General tracker",
+        "type": "tracker",
+        "language": "english"
+    },
+    "DC": {
+        "name": "DigitalCore (DC)",
+        "url": "https://digitalcore.club",
+        "signup_url": "https://digitalcore.club/register.php",
+        "description": "General tracker",
+        "type": "tracker",
+        "language": "english"
+    },
     # English Usenet Indexers
     "DS": {
         "name": "DrunkenSlug (DS)",

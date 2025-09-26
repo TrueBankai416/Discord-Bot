@@ -7,27 +7,32 @@ A Discord bot that monitors popular private torrent trackers for open signups an
 - **Real-time Monitoring**: Checks tracker signup pages and Reddit every 5 minutes
 - **User Subscriptions**: Users can subscribe to specific trackers or Reddit notifications
 - **Instant Notifications**: Sends Discord notifications when signups become available
-- **Multiple Sources**: Monitors 7 English torrent trackers, 4 English Usenet indexers, and Reddit r/OpenSignups
+- **Multiple Sources**: Monitors 12 torrent trackers, 4 Usenet indexers, and Reddit r/OpenSignups
 - **Smart Detection**: Extracts expiration dates and invite codes from English Reddit posts
 - **Language Filtering**: Only monitors English-language trackers and Reddit posts
 - **Persistent Storage**: Saves user subscriptions and tracker status between restarts
 
-## Monitored Sources (English Only)
+## Monitored Sources
 
-### English Torrent Trackers
-- **RED** (Redacted) - English music tracker
-- **OPS** (Orpheus) - English music tracker  
-- **PTP** (PassThePopcorn) - English movie tracker
-- **BTN** (BroadcastTheNet) - English TV tracker
-- **HDB** (HDBits) - English HD movie/TV tracker
-- **TL** (TorrentLeech) - English general tracker
-- **OTW** (Old Toons World) - English cartoon/animation tracker
+### Torrent Trackers
+- **RED** (Redacted) - Music tracker
+- **OPS** (Orpheus) - Music tracker  
+- **PTP** (PassThePopcorn) - Movie tracker
+- **BTN** (BroadcastTheNet) - TV tracker
+- **HDB** (HDBits) - HD movie/TV tracker
+- **TL** (TorrentLeech) - General tracker
+- **OTW** (Old Toons World) - Cartoon/animation tracker
+- **AB** (AnimeBytes) - Anime tracker
+- **BBT** (BakaBT) - Anime tracker
+- **FNP** (FeenoPeer) - General tracker
+- **SP** (SeedPool) - General tracker
+- **DC** (DigitalCore) - General tracker
 
-### English Usenet Indexers
-- **DS** (DrunkenSlug) - English Usenet indexer
-- **GEEK** (NZBGeek) - English Usenet indexer
-- **PLANET** (NZBPlanet) - English Usenet indexer
-- **FINDER** (NZBFinder) - English Usenet indexer
+### Usenet Indexers
+- **DS** (DrunkenSlug) - Usenet indexer
+- **GEEK** (NZBGeek) - Usenet indexer
+- **PLANET** (NZBPlanet) - Usenet indexer
+- **FINDER** (NZBFinder) - Usenet indexer
 
 ### Reddit Monitoring
 - **r/OpenSignups** - Automatic monitoring of Reddit's OpenSignups community (English posts only)
@@ -88,8 +93,8 @@ Lists all monitored trackers with their current signup status (OPEN/CLOSED).
 ### `!subscribe <tracker>`
 Subscribe to notifications for a specific tracker or Reddit.
 - Example: `!subscribe RED` or `!subscribe REDDIT`
-- Available English trackers: RED, OPS, PTP, BTN, HDB, TL, OTW
-- Available English indexers: DS, GEEK, PLANET, FINDER
+- Available trackers: RED, OPS, PTP, BTN, HDB, TL, OTW, AB, BBT, FNP, SP, DC
+- Available indexers: DS, GEEK, PLANET, FINDER
 - Use `REDDIT` for r/OpenSignups notifications
 
 ### `!unsubscribe <tracker>`
