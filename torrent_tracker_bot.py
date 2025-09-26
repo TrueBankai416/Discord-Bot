@@ -25,120 +25,96 @@ CHECK_INTERVAL = 300  # Check every 5 minutes (300 seconds)
 SUBSCRIPTIONS_FILE = "subscriptions.json"
 TRACKER_STATUS_FILE = "tracker_status.json"
 
-# Popular private trackers to monitor
+# English-focused private trackers to monitor
 TRACKERS = {
     "RED": {
         "name": "Redacted (RED)",
         "url": "https://redacted.ch",
         "signup_url": "https://redacted.ch/register.php",
-        "description": "Music tracker",
-        "type": "tracker"
+        "description": "English music tracker",
+        "type": "tracker",
+        "language": "english"
     },
     "OPS": {
         "name": "Orpheus (OPS)",
         "url": "https://orpheus.network",
         "signup_url": "https://orpheus.network/register.php",
-        "description": "Music tracker",
-        "type": "tracker"
+        "description": "English music tracker",
+        "type": "tracker",
+        "language": "english"
     },
     "PTP": {
         "name": "PassThePopcorn (PTP)",
         "url": "https://passthepopcorn.me",
         "signup_url": "https://passthepopcorn.me/register.php",
-        "description": "Movie tracker",
-        "type": "tracker"
+        "description": "English movie tracker",
+        "type": "tracker",
+        "language": "english"
     },
     "BTN": {
         "name": "BroadcastTheNet (BTN)",
         "url": "https://broadcasthe.net",
         "signup_url": "https://broadcasthe.net/register.php",
-        "description": "TV tracker",
-        "type": "tracker"
+        "description": "English TV tracker",
+        "type": "tracker",
+        "language": "english"
     },
     "HDB": {
         "name": "HDBits (HDB)",
         "url": "https://hdbits.org",
         "signup_url": "https://hdbits.org/register.php",
-        "description": "HD movie/TV tracker",
-        "type": "tracker"
-    },
-    "AB": {
-        "name": "AnimeBytes (AB)",
-        "url": "https://animebytes.tv",
-        "signup_url": "https://animebytes.tv/register.php",
-        "description": "Anime tracker",
-        "type": "tracker"
+        "description": "English HD movie/TV tracker",
+        "type": "tracker",
+        "language": "english"
     },
     "TL": {
         "name": "TorrentLeech (TL)",
         "url": "https://www.torrentleech.org",
         "signup_url": "https://www.torrentleech.org/user/account/register",
-        "description": "General tracker",
-        "type": "tracker"
-    },
-    "FNP": {
-        "name": "FeenoPeer (FNP)",
-        "url": "https://feenopeer.com",
-        "signup_url": "https://feenopeer.com/register.php",
-        "description": "General tracker",
-        "type": "tracker"
-    },
-    "SP": {
-        "name": "SeedPool (SP)",
-        "url": "https://www.seedpool.org",
-        "signup_url": "https://www.seedpool.org/register.php",
-        "description": "General tracker",
-        "type": "tracker"
-    },
-    "DC": {
-        "name": "DigitalCore (DC)",
-        "url": "https://digitalcore.club",
-        "signup_url": "https://digitalcore.club/register.php",
-        "description": "General tracker",
-        "type": "tracker"
+        "description": "English general tracker",
+        "type": "tracker",
+        "language": "english"
     },
     "OTW": {
         "name": "Old Toons World (OTW)",
         "url": "https://oldtoonsworld.com",
         "signup_url": "https://oldtoonsworld.com/register.php",
-        "description": "Cartoon/Animation tracker",
-        "type": "tracker"
+        "description": "English cartoon/animation tracker",
+        "type": "tracker",
+        "language": "english"
     },
-    "BBT": {
-        "name": "BakaBT (BBT)",
-        "url": "https://bakabt.me",
-        "signup_url": "https://bakabt.me/signup.php",
-        "description": "Anime tracker",
-        "type": "tracker"
-    },
-    # Usenet Indexers
+    # English Usenet Indexers
     "DS": {
         "name": "DrunkenSlug (DS)",
         "url": "https://drunkenslug.com",
         "signup_url": "https://drunkenslug.com/register",
-        "description": "Usenet indexer",
-        "type": "usenet"
+        "description": "English Usenet indexer",
+        "type": "usenet",
+        "language": "english"
     },
     "GEEK": {
         "name": "NZBGeek (GEEK)",
         "url": "https://nzbgeek.info",
         "signup_url": "https://nzbgeek.info/register.php",
-        "description": "Usenet indexer",
-        "type": "usenet"
+        "description": "English Usenet indexer",
+        "type": "usenet",
+        "language": "english"
     },
     "PLANET": {
         "name": "NZBPlanet (PLANET)",
         "url": "https://nzbplanet.net",
         "signup_url": "https://nzbplanet.net/register",
-        "description": "Usenet indexer",
-        "type": "usenet"
+        "description": "English Usenet indexer",
+        "type": "usenet",
+        "language": "english"
     },
     "FINDER": {
         "name": "NZBFinder (FINDER)",
         "url": "https://nzbfinder.ws",
         "signup_url": "https://nzbfinder.ws/register",
-        "description": "Usenet indexer",
-        "type": "usenet"
+        "description": "English Usenet indexer",
+        "type": "usenet",
+        "language": "english"
     }
 }
 
@@ -260,6 +236,42 @@ async def check_tracker_signup(session: aiohttp.ClientSession, tracker_code: str
         logger.error(f"Error checking {tracker_code}: {e}")
         return False
 
+def is_likely_english(text: str) -> bool:
+    """Simple heuristic to detect if text is likely English"""
+    if not text:
+        return True  # Default to English for empty text
+    
+    # Common English words that are good indicators
+    english_indicators = [
+        'the', 'and', 'for', 'are', 'but', 'not', 'you', 'all', 'can', 'had', 'her', 'was', 'one', 'our', 'out', 'day', 'get', 'has', 'him', 'his', 'how', 'its', 'may', 'new', 'now', 'old', 'see', 'two', 'way', 'who', 'boy', 'did', 'man', 'end', 'few', 'got', 'let', 'put', 'say', 'she', 'too', 'use'
+    ]
+    
+    # Non-English indicators (common words in other languages)
+    non_english_indicators = [
+        # French
+        'le', 'de', 'et', 'à', 'un', 'il', 'être', 'et', 'en', 'avoir', 'que', 'pour', 'dans', 'ce', 'son', 'une', 'sur', 'avec', 'ne', 'se', 'pas', 'tout', 'plus', 'par', 'grand', 'end', 'le', 'bien', 'autre', 'comme', 'notre', 'tout', 'sans', 'peut',
+        # German  
+        'der', 'die', 'und', 'in', 'den', 'von', 'zu', 'das', 'mit', 'sich', 'des', 'auf', 'für', 'ist', 'im', 'dem', 'nicht', 'ein', 'eine', 'als', 'auch', 'es', 'an', 'werden', 'aus', 'er', 'hat', 'dass', 'sie', 'nach', 'wird', 'bei', 'einer', 'um', 'am', 'sind', 'noch', 'wie', 'einem', 'über', 'einen', 'so', 'zum', 'war', 'haben', 'nur', 'oder', 'aber', 'vor', 'zur', 'bis', 'mehr', 'durch', 'man', 'sein', 'wurde', 'sei', 'in',
+        # Spanish
+        'el', 'la', 'de', 'que', 'y', 'a', 'en', 'un', 'es', 'se', 'no', 'te', 'lo', 'le', 'da', 'su', 'por', 'son', 'con', 'para', 'al', 'una', 'ser', 'del', 'los', 'si', 'ya', 'pero', 'más', 'o', 'este', 'sus', 'le', 'ha', 'me', 'mi', 'porque', 'qué', 'sólo', 'han', 'yo', 'hay', 'vez', 'puede', 'todos', 'así', 'nos', 'ni', 'parte', 'tiene', 'él', 'uno', 'donde', 'bien', 'tiempo', 'muy', 'cuando', 'él', 'sin', 'sobre', 'también', 'me', 'hasta', 'hay', 'donde', 'quien', 'desde', 'todo', 'nos', 'durante', 'todos', 'uno', 'les', 'ni', 'contra', 'otros', 'ese', 'eso', 'ante', 'ellos', 'e', 'esto', 'mí', 'antes', 'algunos', 'qué', 'unos', 'yo', 'otro', 'otras', 'otra', 'él', 'tanto', 'esa', 'estos', 'mucho', 'quienes', 'nada', 'muchos', 'cual', 'poco', 'ella', 'estar', 'estas', 'algunas', 'algo', 'nosotros', 'mi', 'mis', 'tú', 'te', 'ti', 'tu', 'tus', 'ellas', 'nosotras', 'vosotros', 'vosotras', 'os', 'mío', 'mía', 'míos', 'mías', 'tuyo', 'tuya', 'tuyos', 'tuyas', 'suyo', 'suya', 'suyos', 'suyas', 'nuestro', 'nuestra', 'nuestros', 'nuestras', 'vuestro', 'vuestra', 'vuestros', 'vuestras', 'esos', 'esas'
+    ]
+    
+    text_lower = text.lower()
+    words = re.findall(r'\b\w+\b', text_lower)
+    
+    if len(words) < 3:
+        return True  # Too short to determine, assume English
+    
+    english_count = sum(1 for word in words if word in english_indicators)
+    non_english_count = sum(1 for word in words if word in non_english_indicators)
+    
+    # If we have a significant number of non-English indicators, it's probably not English
+    if non_english_count > len(words) * 0.1:  # More than 10% non-English indicators
+        return False
+    
+    # If we have English indicators or no strong non-English indicators, assume English
+    return english_count > 0 or non_english_count == 0
+
 async def check_reddit_opensignups(session: aiohttp.ClientSession) -> List[dict]:
     """Check /r/OpenSignups for new posts"""
     try:
@@ -291,8 +303,14 @@ async def check_reddit_opensignups(session: aiohttp.ClientSession) -> List[dict]
                     author = post_data['author']
                     permalink = f"https://reddit.com{post_data['permalink']}"
                     
+                    # Check if the post is likely in English
+                    full_text = f"{title} {selftext}"
+                    if not is_likely_english(full_text):
+                        logger.info(f"Skipping non-English Reddit post: {title[:50]}...")
+                        continue
+                    
                     # Look for expiration dates and invite codes in title and text
-                    full_text = f"{title} {selftext}".lower()
+                    full_text_lower = full_text.lower()
                     
                     # Extract expiration date patterns
                     expiry_patterns = [
@@ -305,7 +323,7 @@ async def check_reddit_opensignups(session: aiohttp.ClientSession) -> List[dict]
                     
                     expiry_date = None
                     for pattern in expiry_patterns:
-                        match = re.search(pattern, full_text, re.IGNORECASE)
+                        match = re.search(pattern, full_text_lower, re.IGNORECASE)
                         if match:
                             expiry_date = match.group(1)
                             break
@@ -320,14 +338,14 @@ async def check_reddit_opensignups(session: aiohttp.ClientSession) -> List[dict]
                     
                     invite_code = None
                     for pattern in invite_patterns:
-                        match = re.search(pattern, full_text, re.IGNORECASE)
+                        match = re.search(pattern, full_text_lower, re.IGNORECASE)
                         if match:
                             invite_code = match.group(1)
                             break
                     
                     # Determine tracker type from title
                     tracker_type = "tracker"  # default
-                    if any(word in full_text for word in ['usenet', 'nzb', 'indexer']):
+                    if any(word in full_text_lower for word in ['usenet', 'nzb', 'indexer']):
                         tracker_type = "usenet"
                     
                     post_info = {
