@@ -281,11 +281,6 @@ def is_likely_english(text: str) -> bool:
     if not text:
         return True  # Default to English for empty text
     
-    # Common English words that are good indicators
-    english_indicators = {
-        'the', 'and', 'for', 'are', 'but', 'not', 'you', 'all', 'can', 'had', 'her', 'was', 'one', 'our', 'out', 'day', 'get', 'has', 'him', 'his', 'how', 'its', 'may', 'new', 'now', 'old', 'see', 'two', 'way', 'who', 'boy', 'did', 'man', 'end', 'few', 'got', 'let', 'put', 'say', 'she', 'too', 'use'
-    }
-    
     # Non-English indicators (common words in other languages, excluding English false positives)
     non_english_indicators = {
         # French
